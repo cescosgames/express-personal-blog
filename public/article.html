@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+</head>
+<body>
+    <div id="article">
+        <h1 id="title"></h1>
+        <p id="content"></p>
+    </div>
+
+    
+    <!-- inline script -->
+    <script>
+        // Get the article ID from the URL
+        const articleId = window.location.pathname.split('/').pop();
+        
+        async function getActivePost() {
+            try {
+                const res = await fetch(`/api/posts/${articleId}`);
+                if(!res.ok) {
+                    document.getElementById('article').innerHTML = `<p>Error Loading Post</p>`;
+                }
+
+                const post = await res.json();
+
+                document.getElementById('title').textContent = post.title;
+                document.getElementById('content').textContent = post.content;
+
+            } catch (error) {
+                document.getElementById('article').innerHTML = `<p>${error.message}</p>`;
+            }
+        };
+
+        getActivePost();
+    </script>
+</body>
+</html>
