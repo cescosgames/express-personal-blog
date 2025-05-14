@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import authMiddleware from '../middleware/auth.js'
 const router = express.Router();
 // moving frontend routing here
 
@@ -20,7 +21,7 @@ router.get('/new', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'new.html'));
 });
 
-router.get('/admin', (req, res) => {
+router.get('/admin', authMiddleware, (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'admin.html'));
 });
 

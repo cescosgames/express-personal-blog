@@ -25,11 +25,17 @@ app.use('/api/posts', posts)
 // our frontend posts route
 app.use('/', frontend);
 
+// simulating a 'logout'
+app.get('/logout', (req, res) => {
+    // console.log('logging out');
+    res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+    res.status(401).send('You have been logged out.');
+});
+
 // 404 for undefined routes
 app.use((req, res, next) => {
     res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
-
 
 // using vites port: NOTE, node has a bult in watch feature, similar to nodemon - see package.json dev function
 app.listen(port, () => console.log(`Server started on port ${port}`));
