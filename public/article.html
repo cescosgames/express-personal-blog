@@ -7,16 +7,28 @@
     <link rel="stylesheet" href="/styles/styles.css">
 </head>
 <body>
-    <div id="article">
-        <h1 id="title"></h1>
-        <p id="content"></p>
+    <div class="wrapper">
+        <nav>
+            <a href="/home">Back</a>
+        </nav>
+
+        <div id="article">
+            <h1 id="title"></h1>
+            <p id="date"></p>
+            <p id="postID"></p>
+            <p id="content"></p>
+        </div>
     </div>
 
     
     <!-- inline script -->
     <script>
-        // Get the article ID from the URL
-        const articleId = window.location.pathname.split('/').pop();
+        // get the article ID from the URL
+        const articleId = window.location.pathname.split('/').pop(); // using this to extract the last segment of the URL 
+        // window.location object holds all the info on the URL
+        // .pathname gives us the URL path i.e. https://example.com/article/1 becomes /article/1
+        // split is straightforward, splits on the / and pop, you remember! removes and returns last element
+        // now that we have the id # we can fetch it
         
         async function getActivePost() {
             try {
@@ -28,10 +40,13 @@
                 const post = await res.json();
 
                 document.getElementById('title').textContent = post.title;
+                document.getElementById('date').textContent = post.date;
+                document.getElementById('postID').textContent = `Post ID: ${post.id}`;
                 document.getElementById('content').textContent = post.content;
 
             } catch (error) {
-                document.getElementById('article').innerHTML = `<p>${error.message}</p>`;
+                // document.getElementById('article').innerHTML = `<p>${error.message}</p>`;
+                document.getElementById('article').innerHTML = `<p>Article Not Found, Please Return Home</p>`;
             }
         };
 

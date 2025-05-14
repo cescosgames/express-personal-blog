@@ -1,1 +1,1 @@
-// console.log('hello world');
+// changed my mind, we aren't doing anything fancy we can do all our scripts inline tbh

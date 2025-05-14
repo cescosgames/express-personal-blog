@@ -16,7 +16,17 @@ router.get('/article', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'article.html'));
 });
 
+router.get('/new', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'new.html'));
+});
 
+router.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'admin.html'));
+});
+
+router.get('/edit/:id', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'edit.html'));
+});
 
 router.get('/home', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'home.html'));

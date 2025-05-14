@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Post</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+</head>
+<body>
+    <div class="wrapper">
+        <h1>Create new post</h1>
+
+        <div class="navbar">
+            <a href="/admin">Back</a>
+        </div>
+
+        <!-- form to POST -->
+        <form action="" id="add-post-form" class="new-post-form">
+            <label for="title:">Title</label>
+            <br>
+            <input type="text" name="title" id="title" class="new-post-submission">
+            <br>
+            <label for="Content:">Content</label>
+            <br>
+            <input type="text" name="content" id="content" class="new-post-content new-post-submission">
+            <br>
+            <button type="submit" class="new-post-submission new-post-button">Add Post</button>
+        </form>
+        
+
+        
+    </div>
+
+    <script>
+        const form = document.querySelector('#add-post-form') // get our form
+
+        async function addPost(event) {
+            event.preventDefault();
+            const formData = new FormData(this); // get the form data
+            const title = formData.get('title'); // get the title
+            const content = formData.get('content'); // get the content
+
+            // // check we have a title - actually not gonna implement this right now, but would just need to connect this to an error message and we'd be good to go
+            // if (!title.trim()) {
+            //     return "Title cannot be empty.";
+            // } else if (!/^[a-zA-Z\s]+$/.test(input)) {
+            //     return "Title must only contain letters and spaces.";
+            // } 
+
+            // try catch it
+            try {
+                const res = await fetch('http://localhost:5173/api/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title, content })
+                });
+
+                if(!res.ok) {
+                    throw new Error('Failed to post');
+                };
+            } catch (error) {
+                console.error('Catch error in add post');
+            };
+
+            window.location.href = "/admin";
+        };
+
+        form.addEventListener('submit', addPost);
+
+    </script>
+
+</body>
+</html>

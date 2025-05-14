@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
+    <title>Admin</title>
     <link rel="stylesheet" href="/styles/styles.css">
 </head>
 <body>
     <div class="wrapper">
-        <h1>Home</h1>
+        <h1>Admin</h1>
         <div class="navbar">
             <div class="leftnav">
-            <a href="/">Index</a>
-            <!-- <a href="/new">New Post</a> // this was moved to admin-->
-             <a href="/admin">Admin</a>
+                <a href="/">Index</a>  
+                <a href="/home">Home</a>
             </div>
+            <a href="/new">New Post</a>
         </div>
         <hr>
         <div id="post-list" class="post-list">
@@ -42,13 +42,37 @@
                 posts.forEach(post => {
                     const postID = post.id;
                     const postElement = document.createElement('div'); // create a div for each post
-                    postElement.innerHTML = `<div class="post-preview"><a href=/article/${postID}>${post.title}</a> <p class="text-fade">${post.date}</p></div>`;
+                    // need to add edit and delete buttons here on admin page
+                    postElement.innerHTML = `
+                        <div class="post-preview">
+                            <p>${post.title}</p>
+                            <div class="admin-buttons">
+                                <a href=/edit/${postID}>Edit</a>
+                                <button id="delete-button${postID}" class="delete-button">X</button>
+                            </div>
+                        </div>`;
                     postList.appendChild(postElement); // append our post to the output
+
+                    const button = document.getElementById(`delete-button${postID}`);
+
+                    button.addEventListener("click", async() => {
+                        try {
+                            const res = await fetch(`http://localhost:5173/api/posts/${postID}`, {
+                                method: "DELETE",
+                            });
+                        } catch (error) {
+                            console.error(error);
+                            alert("Error occured during deletion");
+                        };
+
+                        window.location.href = "/admin";
+                    });
+
                 });
 
             } catch (error) {
                 document.getElementById('post-list').innerHTML = `<p>Error loading posts</p>`;
-            }
+            };
         };
 
         loadAllPostsPreview();

@@ -17,81 +17,128 @@ const blogpostsDir = path.join(__dirname, '../public/blogposts');
 
 // route to get all posts FROM our public blogposts directory
 router.get('/', (req, res, next) => {
-    // add a string query limit
-    const limit = parseInt(req.query.limit);
+    // use fs to read our directory
+    fs.readdir(blogpostsDir, (err, files) => {
+        if (err) { // if we got an error
+            return res.status(500).json({ error: 'Failed to read blog posts directory' });
+        };
 
-    // add some light error handling
-    if(!isNaN(limit) && limit > 0) {
-        return res.status(200).json(posts.slice(0, limit)); // if we have a limit, return the limit amount of posts
-    };
+        // map over our files to get our posts
+        const posts = files.map(file => {
+            const content = fs.readFileSync(path.join(blogpostsDir, file), 'utf-8'); // get our content from our file at the path, encoded in utf8
+            return JSON.parse(content); // return the parsed content
+        });
 
-    // otherwise return all 'posts'
-    res.status(200).json(posts);
+        res.status(200).json(posts);
+    });
 });
 
 // route to get a specific post
 router.get('/:id', (req, res, next) => {
-    // get the post id and convert to int use request parameters
-    const id = parseInt(req.params.id); 
+    // get the post by going through the file path
+    const postPath = path.join(blogpostsDir, `post${req.params.id}.json`); // returns something like post1 since posts will be labeled as such
 
-    // then find relevant post in posts array using find matching IDs
-    const post = posts.find((post) => post.id === id);
-
-    // error handling to see if post exists
-    if(!post) {
-        return res.status(404).json({ msg: `Post with id ${id} not found` }); // return a 404 with short message
+    if(!fs.existsSync(postPath)) { // if this filepath doesn't exist
+        return res.status(404).json({ error: `Post with id ${req.params.id} not found`});
     };
 
-    res.status(200).json(post); // otherwise send back the post
+    const content = fs.readFileSync(postPath, 'utf-8'); // get our post with readFile through our path, utf8 encoding
+
+    res.json(JSON.parse(content)); // send it back
 });
 
 // route to create a post
 router.post('/', (req, res, next) => {
-    // create the new post object
-    const newPost = {
-        id: posts.length + 1, // simple ID system, just + 1 of most recent, might get messy with deletions
-        title: req.body.title, // request body title
-    };
+    // destructure our content
+    const { title, content } = req.body;
 
-    // simple check to see if it exists
-    if(!newPost.title) {
-        return res.status(404).json({ success: false, msg: `Please Provide Content To Post`});
-    };
+    if(!title || !content) {
+        return res.status(404).json({ error: 'Title and content are required to create a post' });
+    }
 
-    // otherwise push it
-    posts.push(newPost);
+    fs.readdir(blogpostsDir, (err, files) => {
+        if (err) { // if we got an error
+            return res.status(500).json({ error: 'Failed to load blog posts directory' });
+        };
 
-    res.status(201).json(posts); // 201 for successful creation
+        // get the last blog post from our directory and it's path
+        const lastFile = files[files.length-1];
+        if(!lastFile) {
+            const id = 1;
+            const MSdate = Date.now();
+            const dateObj = new Date(MSdate)
+            // format date time here before sending to json
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // remember, months are 0-indexed
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const year = dateObj.getFullYear();
+
+            const date = `${month}/${day}/${year}`;
+            
+            const newPost = { id, title, content, date };
+            const newPostPath = path.join(blogpostsDir, `post${id}.json`); // our post submission 
+
+            fs.writeFileSync(newPostPath, JSON.stringify(newPost, null, 2)); // writing our new post to our file path
+
+            res.status(201).json(newPost); // 201 successfully created!
+            return;
+        }
+        // otherwise, get the file path
+        const lastFilePath = path.join(blogpostsDir, lastFile);
+
+        // and read it into JSON so we can extract id
+        fs.readFile(lastFilePath, 'utf-8', (err, data) => {
+            try {
+                const post = JSON.parse(data);
+                const lastID = post.id;
+                const id = lastID + 1;
+                const MSdate = Date.now();
+                const dateObj = new Date(MSdate)
+                // format date time here before sending to json
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // remember, months are 0-indexed
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const year = dateObj.getFullYear();
+
+                const date = `${month}/${day}/${year}`;
+                
+                const newPost = { id, title, content, date };
+                const newPostPath = path.join(blogpostsDir, `post${id}.json`); // our post submission 
+
+                fs.writeFileSync(newPostPath, JSON.stringify(newPost, null, 2)); // writing our new post to our file path
+
+                res.status(201).json(newPost); // 201 successfully created!
+            } catch (error) {
+                return res.status(500).json({ error: `Failed to find previous blog post ID` });
+            }
+        });
+    });
 });
 
 // route to update post
 router.put('/:id', (req, res, next) => {
-    // get the id of post to update, super similar to our get single post request
-    const id = parseInt(req.params.id);
-    const postToUpdate = posts.find((post) => post.id === id); 
+    // similar approach to get single post, find using filepath for our current situation
+    const postPath = path.join(blogpostsDir, `post${req.params.id}.json`);
 
-    // check if it exists
-    if(!postToUpdate) {
-        return res.status(404).json({ success: false, msg: `Post with id ${id} not found` });
-    }
+    if(!fs.existsSync(postPath)) { // if our filepath doesn't exist
+        return res.status(404).json({ error: `Post with id ${id} not found`});
+    };
 
-    // otherwise, send the update
-    postToUpdate.title = req.body.title;
-    res.status(200).json(posts);
+    const updatedPost = {...JSON.parse(fs.readFileSync(postPath, 'utf-8')), ...req.body }; // add the updated body and overwrite
+    fs.writeFileSync(postPath, JSON.stringify(updatedPost, null, 2));
+
+    res.json(updatedPost);
 });
 
 // route to delete post
 router.delete('/:id', (req, res, next) => {
     // similar to put and get single post
-    const id = parseInt(req.params.id);
-    const post = posts.find((post) => post.id === id);
+    const postPath = path.join(blogpostsDir, `post${req.params.id}.json`);
 
-    if(!post) {
-        return res.status(404).json({ success: false, msg: `Post with id ${id} not found` });
-    }
+    if(!fs.existsSync(postPath)) { // if our filepath doesn't exist
+        return res.status(404).json({ error: `Post with id ${id} not found`});
+    };
 
-    posts = posts.filter((post) => post.id !== id) // returns all posts except matching ID
-    res.status(200).json(posts);
+    fs.unlinkSync(postPath); // removes a file
+    res.status(200).json({ message: 'Post Deleted '});
 });
 
 

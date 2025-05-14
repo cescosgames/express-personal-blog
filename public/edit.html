@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Post</title>
+    <link rel="stylesheet" href="/styles/styles.css">
+</head>
+<body>
+    <div class="wrapper">
+        <h1>Edit Post</h1>
+
+        <div class="navbar">
+            <a href="/admin">Back</a>
+        </div>
+
+        <!-- form to EDIT -->
+        <form action="" id="edit-post-form" class="new-post-form">
+            <label for="title:">New Title</label>
+            <br>
+            <input type="text" name="title" id="title" class="new-post-submission">
+            <br>
+            <label for="Content:">New Content</label>
+            <br>
+            <input type="text" name="content" id="content" class="new-post-content new-post-submission">
+            <br>
+            <button type="submit" class="new-post-submission new-post-button">Edit Post</button>
+        </form>
+        
+
+        
+    </div>
+
+    <script>
+        const form = document.querySelector('#edit-post-form') // get our form
+        const articleId = window.location.pathname.split('/').pop(); // get our ID
+
+        const editTitle = document.getElementById('title'); // to prefill
+        const editContent = document.getElementById('content'); // to prefill
+
+        async function prefillContent() {
+            // first get the post
+            try {
+                const res = await fetch(`/api/posts/${articleId}`);
+                if(!res.ok) {
+                    editContent.value = `<p>Error Loading Post</p>`;
+                    return;
+                }
+
+                const post = await res.json();
+                // preloading so it's easier to make sense of the edit
+                editTitle.value = post.title;
+                editContent.value = post.content;
+
+            } catch (error) {
+                // document.getElementById('article').innerHTML = `<p>${error.message}</p>`;
+                document.getElementById('title').innerHTML = `<p>Article Not Found, Please Return Home</p>`;
+                console.log('error catch')
+            }
+        };
+
+        prefillContent();
+
+        async function addPost(event) {
+            event.preventDefault();
+            const formData = new FormData(this); // get the form data
+            const title = formData.get('title'); // get the title
+            const content = formData.get('content'); // get the content
+
+            // try catch it
+            try {
+                const res = await fetch(`http://localhost:5173/api/posts/${articleId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title, content })
+                });
+
+                if(!res.ok) {
+                    throw new Error('Failed to post');
+                };
+            } catch (error) {
+                console.error('Catch error in add post');
+            };
+
+            window.location.href = "/admin";
+        };
+
+        form.addEventListener('submit', addPost);
+
+    </script>
+
+</body>
+</html>
