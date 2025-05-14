@@ -60,6 +60,7 @@
     border-radius: 20px;
     text-align: left;
     overflow-wrap: scroll; /* why don't you work */
+    padding: 10px;
 }
 
 .new-post-submission {
